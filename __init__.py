@@ -98,6 +98,51 @@ def enregistrer_client():
     conn.commit()
     conn.close()
     return redirect('/consultation/')  # Rediriger vers la page d'accueil après l'enregistrement
+
+@app.route('/admin/ajouter_livre', methods=['POST'])
+def ajouter_livre():
+    if not est_authentifie(): 
+        return "Accès réservé à l'administration", 403
+    
+    titre = request.form['titre']
+    auteur = request.form['auteur']
+    
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO livres (titre, auteur, disponible) VALUES (?, ?, 1)', (titre, auteur))
+    conn.commit()
+    conn.close()
+    return "Livre ajouté avec succès !"
+
+# 2. Recherche de livres disponibles
+@app.route('/recherche_livres')
+def recherche_livres():
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    # On ne cherche que les livres marqués comme disponibles (1)
+    cursor.execute('SELECT * FROM livres WHERE disponible = 1')
+    livres = cursor.fetchall()
+    conn.close()
+    return render_template('read_data.html', data=livres)
+
+# 3. Emprunter un livre (User uniquement)
+@app.route('/emprunter/<int:livre_id>')
+def emprunter(livre_id):
+    if not est_authentifie_user():
+        return "Veuillez vous connecter en tant qu'utilisateur pour emprunter", 401
+    
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    # On passe le livre à disponible = 0 (emprunté)
+    cursor.execute('UPDATE livres SET disponible = 0 WHERE id = ? AND disponible = 1', (livre_id,))
+    
+    if cursor.rowcount == 0:
+        conn.close()
+        return "Erreur : Livre déjà emprunté ou inexistant."
+    
+    conn.commit()
+    conn.close()
+    return f"Félicitations, vous avez emprunté le livre n°{livre_id} !"
                                                                                                                                        
 if __name__ == "__main__":
   app.run(debug=True)
