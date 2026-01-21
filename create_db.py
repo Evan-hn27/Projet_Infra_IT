@@ -7,6 +7,20 @@ with open('schema.sql') as f:
 
 cur = connection.cursor()
 
+cur.execute('''
+CREATE TABLE IF NOT EXISTS livres (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titre TEXT NOT NULL,
+    auteur TEXT NOT NULL,
+    disponible INTEGER DEFAULT 1
+)
+''')
+
+cur.execute("INSERT INTO livres (titre, auteur, disponible) VALUES (?, ?, ?)", ("Le Petit Prince", "Antoine de Saint-Exupéry", 1))
+cur.execute("INSERT INTO livres (titre, auteur, disponible) VALUES (?, ?, ?)", ("1984", "George Orwell", 1))
+cur.execute("INSERT INTO livres (titre, auteur, disponible) VALUES (?, ?, ?)", ("Le Seigneur des Anneaux", "J.R.R. Tolkien", 1))
+cur.execute("INSERT INTO livres (titre, auteur, disponible) VALUES (?, ?, ?)", ("L'Étranger", "Albert Camus", 0)) # Livre déjà emprunté
+
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('DUPONT', 'Emilie', '123, Rue des Lilas, 75001 Paris'))
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('LEROUX', 'Lucas', '456, Avenue du Soleil, 31000 Toulouse'))
 cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('MARTIN', 'Amandine', '789, Rue des Érables, 69002 Lyon'))
@@ -18,3 +32,4 @@ cur.execute("INSERT INTO clients (nom, prenom, adresse) VALUES (?, ?, ?)",('LEFE
 
 connection.commit()
 connection.close()
+print("Base de données mise à jour avec la table Livres !")
