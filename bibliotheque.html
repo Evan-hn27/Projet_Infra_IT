@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ma Bibliothèque</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        tr:nth-child(even) { background-color: #f2 f2 f2; }
+        .btn-emprunt { background-color: #4CAF50; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; }
+        .section-admin { background-color: #eee; padding: 15px; margin-bottom: 20px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+    <h1>Gestion de la Bibliothèque</h1>
+
+    <div class="section-admin">
+        <h3>Ajouter un livre (Admin)</h3>
+        <form action="/admin/ajouter_livre" method="POST">
+            <input type="text" name="titre" placeholder="Titre du livre" required>
+            <input type="text" name="auteur" placeholder="Auteur" required>
+            <button type="submit">Ajouter au stock</button>
+        </form>
+    </div>
+
+    <h3>Livres disponibles</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Titre</th>
+                <th>Auteur</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for livre in data %}
+            <tr>
+                <td>{{ livre[0] }}</td>
+                <td>{{ livre[1] }}</td>
+                <td>{{ livre[2] }}</td>
+                <td>
+                    <a href="/emprunter/{{ livre[0] }}" class="btn-emprunt">Emprunter</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
