@@ -12,6 +12,9 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'  # Clé secrète pour les sessions
 def est_authentifie():
     return session.get('authentifie')
 
+def est_authentifie_user():
+    return session.get('authentifie_user')
+
 @app.route('/')
 def hello_world():
     return render_template('hello.html')
@@ -33,11 +36,30 @@ def authentification():
             session['authentifie'] = True
             # Rediriger vers la route lecture après une authentification réussie
             return redirect(url_for('lecture'))
+
+        elif request.form['username'] == 'user' and request.form['password'] == '12345':
+            session['authentifie_user'] = True
+            return redirect(url_for('ReadBDD'))
         else:
             # Afficher un message d'erreur si les identifiants sont incorrects
             return render_template('formulaire_authentification.html', error=True)
 
     return render_template('formulaire_authentification.html', error=False)
+
+@app.route('/fiche_nom/<nom>')
+def fiche_nom(nom):
+    # Vérification de l'accès User (Exercice 2 de la séquence 5)
+    if not est_authentifie_user():
+        return "Accès refusé. Veuillez vous connecter avec le compte 'user'.", 401
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    # Utilisation de la requête SQL avec filtre sur le nom
+    cursor.execute('SELECT * FROM clients WHERE nom = ?', (nom,))
+    data = cursor.fetchall()
+    conn.close()
+    
+    return render_template('read_data.html', data=data)
 
 @app.route('/fiche_client/<int:post_id>')
 def Readfiche(post_id):
