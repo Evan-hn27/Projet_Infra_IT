@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionnaire de Tâches</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links a {
+            margin-left: 15px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .actions-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-add {
+            padding: 12px 25px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        
+        .btn-add:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+        
+        .tasks-container {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .task-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            border-left: 5px solid #667eea;
+            transition: all 0.3s;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .task-card.terminee {
+            opacity: 0.7;
+            border-left-color: #28a745;
+            background: #f8f9fa;
+        }
+        
+        .task-card.urgente {
+            border-left-color: #dc3545;
+        }
+        
+        .task-card.retard {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .task-title {
+            font-size: 1.3em;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .task-card.terminee .task-title {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        .task-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+        }
+        
+        .date-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+        
+        .date-badge.ok {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .date-badge.urgent {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .date-badge.retard {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .no-tasks {
+            background: white;
+            padding: 60px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .no-tasks h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .no-tasks p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>✅ Gestionnaire de Tâches</h1>
+                <div class="nav-links">
+                    <a href="/bibliotheque">📚 Bibliothèque</a>
+                    <a href="/mes_emprunts">📖 Emprunts</a>
+                    <a href="/">🏠 Accueil</a>
+                    <a href="/deconnexion">🚪 Déconnexion</a>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Statistiques -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ total }}</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ en_cours }}</div>
+                <div class="stat-label">En cours</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ terminees }}</div>
+                <div class="stat-label">Terminées</div>
+            </div>
+        </div>
+        
+        <!-- Barre d'actions -->
+        <div class="actions-bar">
+            <div class="filters">
+                <a href="/taches" class="filter-btn {% if filtre_actif == 'toutes' %}active{% endif %}">
+                    📋 Toutes
+                </a>
+                <a href="/taches?filtre=en_cours" class="filter-btn {% if filtre_actif == 'en_cours' %}active{% endif %}">
+                    ⏳ En cours
+                </a>
+                <a href="/taches?filtre=terminees" class="filter-btn {% if filtre_actif == 'terminees' %}active{% endif %}">
+                    ✅ Terminées
+                </a>
+                <a href="/taches?filtre=urgentes" class="filter-btn {% if filtre_actif == 'urgentes' %}active{% endif %}">
+                    🔥 Urgentes
+                </a>
+            </div>
+            <a href="/taches/ajouter" class="btn-add">➕ Nouvelle Tâche</a>
+        </div>
+        
+        <!-- Liste des tâches -->
+        {% if taches %}
+            <div class="tasks-container">
+                {% for tache in taches %}
+                    {% set jours_restants = None %}
+                    {% set en_retard = False %}
+                    {% set urgent = False %}
+                    
+                    {% if tache.date_echeance and tache.terminee == 0 %}
+                        {% set date_ech = tache.date_echeance|string %}
+                        {% set jours_restants = (date_ech[:10]|replace('-', '')|int - today.strftime('%Y%m%d')|int) %}
+                        {% set en_retard = jours_restants < 0 %}
+                        {% set urgent = jours_restants >= 0 and jours_restants <= 3 %}
+                    {% endif %}
+                    
+                    <div class="task-card {% if tache.terminee %}terminee{% elif en_retard %}retard{% elif urgent %}urgente{% endif %}">
+                        <div class="task-header">
+                            <div>
+                                <div class="task-title">
+                                    {% if tache.terminee %}✓{% endif %} {{ tache.titre }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if tache.description %}
+                            <div class="task-description">{{ tache.description }}</div>
+                        {% endif %}
+                        
+                        <div class="task-meta">
+                            <div class="meta-item">
+                                📅 Créée le {{ tache.date_creation[:10] }}
+                            </div>
+                            
+                            {% if tache.date_echeance %}
+                                <div class="meta-item">
+                                    ⏰ Échéance: 
+                                    {% if tache.terminee %}
+                                        <span class="date-badge ok">{{ tache.date_echeance[:10] }}</span>
+                                    {% elif en_retard %}
+                                        <span class="date-badge retard">{{ tache.date_echeance[:10] }} (EN RETARD)</span>
+                                    {% elif urgent %}
+                                        <span class="date-badge urgent">{{ tache.date_echeance[:10] }} ({{ jours_restants }} jour(s))</span>
+                                    {% else %}
+                                        <span class="date-badge ok">{{ tache.date_echeance[:10] }}</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="task-actions">
+                            {% if tache.terminee == 0 %}
+                                <form action="/taches/terminer/{{ tache.id }}" method="post" style="margin: 0;">
+                                    <button type="submit" class="btn btn-success">✓ Terminer</button>
+                                </form>
+                            {% else %}
+                                <form action="/taches/terminer/{{ tache.id }}" method="post" style="margin: 0;">
+                                    <button type="submit" class="btn btn-warning">↺ Réactiver</button>
+                                </form>
+                            {% endif %}
+                            
+                            <a href="/taches/details/{{ tache.id }}" class="btn btn-primary">👁️ Détails</a>
+                            <a href="/taches/modifier/{{ tache.id }}" class="btn btn-primary">✏️ Modifier</a>
+                            
+                            <form action="/taches/supprimer/{{ tache.id }}" method="post" 
+                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')"
+                                  style="margin: 0;">
+                                <button type="submit" class="btn btn-danger">🗑️ Supprimer</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-tasks">
+                <h2>🎉 Aucune tâche {% if filtre_actif == 'en_cours' %}en cours{% elif filtre_actif == 'terminees' %}terminée{% elif filtre_actif == 'urgentes' %}urgente{% endif %}</h2>
+                <p>Commencez par ajouter une nouvelle tâche pour organiser votre travail !</p>
+                <a href="/taches/ajouter" class="btn-add">➕ Créer ma première tâche</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
