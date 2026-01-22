@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails - {{ tache.titre }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .task-detail {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .task-header {
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        
+        .status-badge.terminee {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-badge.en-cours {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .task-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .task-title.terminee {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .info-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.2em;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .description-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .description-text {
+            color: #333;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        
+        .date-info {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .date-info.ok {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .date-info.urgent {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .date-info.retard {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .no-description {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/taches" class="back-link">← Retour à mes tâches</a>
+        
+        <div class="task-detail">
+            <div class="task-header">
+                {% if tache.terminee %}
+                    <div class="status-badge terminee">✓ Terminée</div>
+                {% else %}
+                    <div class="status-badge en-cours">⏳ En cours</div>
+                {% endif %}
+                
+                <h1 class="task-title {% if tache.terminee %}terminee{% endif %}">
+                    {{ tache.titre }}
+                </h1>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-label">📅 Date de création</div>
+                    <div class="info-value">{{ tache.date_creation[:10] }}</div>
+                </div>
+                
+                {% if tache.date_echeance %}
+                    {% set date_ech = tache.date_echeance|string %}
+                    {% set jours_restants = (date_ech[:10]|replace('-', '')|int - today.strftime('%Y%m%d')|int) %}
+                    {% set en_retard = jours_restants < 0 %}
+                    {% set urgent = jours_restants >= 0 and jours_restants <= 3 %}
+                    
+                    <div class="info-card">
+                        <div class="info-label">⏰ Date d'échéance</div>
+                        <div class="info-value">
+                            {% if tache.terminee %}
+                                <span class="date-info ok">{{ tache.date_echeance[:10] }}</span>
+                            {% elif en_retard %}
+                                <span class="date-info retard">
+                                    {{ tache.date_echeance[:10] }}<br>
+                                    <small>EN RETARD ({{ -jours_restants }} jour(s))</small>
+                                </span>
+                            {% elif urgent %}
+                                <span class="date-info urgent">
+                                    {{ tache.date_echeance[:10] }}<br>
+                                    <small>⚠️ {{ jours_restants }} jour(s) restant(s)</small>
+                                </span>
+                            {% else %}
+                                <span class="date-info ok">
+                                    {{ tache.date_echeance[:10] }}<br>
+                                    <small>{{ jours_restants }} jour(s) restant(s)</small>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="description-section">
+                <h2 class="section-title">📝 Description</h2>
+                {% if tache.description %}
+                    <div class="description-text">{{ tache.description }}</div>
+                {% else %}
+                    <p class="no-description">Aucune description fournie pour cette tâche.</p>
+                {% endif %}
+            </div>
+            
+            <div class="actions">
+                {% if tache.terminee == 0 %}
+                    <form action="/taches/terminer/{{ tache.id }}" method="post" style="margin: 0;">
+                        <button type="submit" class="btn btn-success">✓ Marquer comme terminée</button>
+                    </form>
+                {% else %}
+                    <form action="/taches/terminer/{{ tache.id }}" method="post" style="margin: 0;">
+                        <button type="submit" class="btn btn-warning">↺ Réactiver la tâche</button>
+                    </form>
+                {% endif %}
+                
+                <a href="/taches/modifier/{{ tache.id }}" class="btn btn-primary">✏️ Modifier</a>
+                
+                <form action="/taches/supprimer/{{ tache.id }}" method="post" 
+                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')"
+                      style="margin: 0;">
+                    <button type="submit" class="btn btn-danger">🗑️ Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
