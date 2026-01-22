@@ -546,6 +546,192 @@ def admin_emprunts():
     
     return render_template('admin_emprunts.html', emprunts=emprunts, today=datetime.now())
 
+# ==================== GESTIONNAIRE DE TÂCHES ====================
+
+# --- PAGE PRINCIPALE TÂCHES ---
+@app.route('/taches')
+def taches():
+    """Page principale du gestionnaire de tâches"""
+    if not est_authentifie_user() and not est_authentifie():
+        return redirect(url_for('authentification'))
+    
+    conn = get_db_connection(DATABASE_LIBRARY)
+    
+    # Filtres
+    filtre = request.args.get('filtre', 'toutes')
+    
+    # Requête de base
+    query = '''
+        SELECT * FROM tasks 
+        WHERE user_id = ?
+    '''
+    params = [session.get('user_id')]
+    
+    # Appliquer les filtres
+    if filtre == 'en_cours':
+        query += ' AND terminee = 0'
+    elif filtre == 'terminees':
+        query += ' AND terminee = 1'
+    elif filtre == 'urgentes':
+        today = datetime.now().strftime('%Y-%m-%d')
+        query += ' AND terminee = 0 AND date_echeance <= date(?, "+3 days")'
+        params.append(today)
+    
+    query += ' ORDER BY date_echeance ASC, date_creation DESC'
+    
+    taches = conn.execute(query, params).fetchall()
+    
+    # Statistiques
+    total = conn.execute('SELECT COUNT(*) as count FROM tasks WHERE user_id = ?', (session.get('user_id'),)).fetchone()['count']
+    en_cours = conn.execute('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND terminee = 0', (session.get('user_id'),)).fetchone()['count']
+    terminees = conn.execute('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND terminee = 1', (session.get('user_id'),)).fetchone()['count']
+    
+    conn.close()
+    
+    return render_template('taches.html',
+                         taches=taches,
+                         total=total,
+                         en_cours=en_cours,
+                         terminees=terminees,
+                         filtre_actif=filtre,
+                         today=datetime.now())
+
+# --- AJOUTER UNE TÂCHE ---
+@app.route('/taches/ajouter', methods=['GET', 'POST'])
+def ajouter_tache():
+    """Ajouter une nouvelle tâche"""
+    if not est_authentifie_user() and not est_authentifie():
+        return redirect(url_for('authentification'))
+    
+    if request.method == 'POST':
+        titre = request.form['titre']
+        description = request.form.get('description', '')
+        date_echeance = request.form.get('date_echeance')
+        
+        if not titre:
+            return render_template('message.html',
+                                 message="Le titre est obligatoire",
+                                 type="error"), 400
+        
+        conn = get_db_connection(DATABASE_LIBRARY)
+        conn.execute('''
+            INSERT INTO tasks (titre, description, date_echeance, user_id)
+            VALUES (?, ?, ?, ?)
+        ''', (titre, description, date_echeance if date_echeance else None, session.get('user_id')))
+        conn.commit()
+        conn.close()
+        
+        return render_template('message.html',
+                             message=f"Tâche '{titre}' ajoutée avec succès !",
+                             type="success",
+                             redirect_url=url_for('taches'))
+    
+    return render_template('ajouter_tache.html')
+
+# --- MODIFIER UNE TÂCHE ---
+@app.route('/taches/modifier/<int:tache_id>', methods=['GET', 'POST'])
+def modifier_tache(tache_id):
+    """Modifier une tâche existante"""
+    if not est_authentifie_user() and not est_authentifie():
+        return redirect(url_for('authentification'))
+    
+    conn = get_db_connection(DATABASE_LIBRARY)
+    
+    if request.method == 'POST':
+        titre = request.form['titre']
+        description = request.form.get('description', '')
+        date_echeance = request.form.get('date_echeance')
+        
+        conn.execute('''
+            UPDATE tasks 
+            SET titre = ?, description = ?, date_echeance = ?
+            WHERE id = ? AND user_id = ?
+        ''', (titre, description, date_echeance if date_echeance else None, tache_id, session.get('user_id')))
+        conn.commit()
+        conn.close()
+        
+        return render_template('message.html',
+                             message="Tâche modifiée avec succès !",
+                             type="success",
+                             redirect_url=url_for('taches'))
+    
+    tache = conn.execute('SELECT * FROM tasks WHERE id = ? AND user_id = ?', 
+                         (tache_id, session.get('user_id'))).fetchone()
+    conn.close()
+    
+    if not tache:
+        return "Tâche non trouvée", 404
+    
+    return render_template('modifier_tache.html', tache=tache)
+
+# --- MARQUER COMME TERMINÉE ---
+@app.route('/taches/terminer/<int:tache_id>', methods=['POST'])
+def terminer_tache(tache_id):
+    """Marquer une tâche comme terminée ou non terminée"""
+    if not est_authentifie_user() and not est_authentifie():
+        return redirect(url_for('authentification'))
+    
+    conn = get_db_connection(DATABASE_LIBRARY)
+    
+    # Récupérer l'état actuel
+    tache = conn.execute('SELECT terminee FROM tasks WHERE id = ? AND user_id = ?',
+                         (tache_id, session.get('user_id'))).fetchone()
+    
+    if not tache:
+        conn.close()
+        return "Tâche non trouvée", 404
+    
+    # Inverser l'état
+    nouvel_etat = 0 if tache['terminee'] == 1 else 1
+    
+    conn.execute('''
+        UPDATE tasks SET terminee = ? WHERE id = ? AND user_id = ?
+    ''', (nouvel_etat, tache_id, session.get('user_id')))
+    conn.commit()
+    conn.close()
+    
+    message = "Tâche marquée comme terminée ✓" if nouvel_etat == 1 else "Tâche remise en cours"
+    
+    return render_template('message.html',
+                         message=message,
+                         type="success",
+                         redirect_url=url_for('taches'))
+
+# --- SUPPRIMER UNE TÂCHE ---
+@app.route('/taches/supprimer/<int:tache_id>', methods=['POST'])
+def supprimer_tache(tache_id):
+    """Supprimer une tâche"""
+    if not est_authentifie_user() and not est_authentifie():
+        return redirect(url_for('authentification'))
+    
+    conn = get_db_connection(DATABASE_LIBRARY)
+    conn.execute('DELETE FROM tasks WHERE id = ? AND user_id = ?',
+                 (tache_id, session.get('user_id')))
+    conn.commit()
+    conn.close()
+    
+    return render_template('message.html',
+                         message="Tâche supprimée avec succès",
+                         type="success",
+                         redirect_url=url_for('taches'))
+
+# --- DÉTAILS D'UNE TÂCHE ---
+@app.route('/taches/details/<int:tache_id>')
+def details_tache(tache_id):
+    """Afficher les détails d'une tâche"""
+    if not est_authentifie_user() and not est_authentifie():
+        return redirect(url_for('authentification'))
+    
+    conn = get_db_connection(DATABASE_LIBRARY)
+    tache = conn.execute('SELECT * FROM tasks WHERE id = ? AND user_id = ?',
+                         (tache_id, session.get('user_id'))).fetchone()
+    conn.close()
+    
+    if not tache:
+        return "Tâche non trouvée", 404
+    
+    return render_template('details_tache.html', tache=tache, today=datetime.now())
+
 # ==================== API JSON (pour tests) ====================
 
 @app.route('/api/livres')
@@ -567,6 +753,18 @@ def api_recherche():
     ''', (f'%{query}%', f'%{query}%')).fetchall()
     conn.close()
     return jsonify([dict(livre) for livre in livres])
+
+@app.route('/api/taches')
+def api_taches():
+    """API JSON : Liste des tâches de l'utilisateur"""
+    if not est_authentifie_user() and not est_authentifie():
+        return jsonify({'error': 'Non authentifié'}), 401
+    
+    conn = get_db_connection(DATABASE_LIBRARY)
+    taches = conn.execute('SELECT * FROM tasks WHERE user_id = ? ORDER BY date_echeance',
+                          (session.get('user_id'),)).fetchall()
+    conn.close()
+    return jsonify([dict(t) for t in taches])
 
 if __name__ == "__main__":
     app.run(debug=True)
