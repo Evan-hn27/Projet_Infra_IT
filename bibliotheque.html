@@ -1,51 +1,285 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Ma Bibliothèque</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bibliothèque en ligne</title>
     <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        tr:nth-child(even) { background-color: #f2 f2 f2; }
-        .btn-emprunt { background-color: #4CAF50; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; }
-        .section-admin { background-color: #eee; padding: 15px; margin-bottom: 20px; border: 1px solid #ccc; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .nav-links a {
+            margin-left: 15px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .search-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .search-form input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .search-form select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+        
+        .search-form button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .search-form button:hover {
+            background: #5568d3;
+        }
+        
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .book-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .book-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .book-info {
+            color: #666;
+            margin: 8px 0;
+            font-size: 0.95em;
+        }
+        
+        .book-info strong {
+            color: #333;
+        }
+        
+        .stock {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stock.available {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .stock.low {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .book-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .no-results {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            color: #666;
+        }
     </style>
 </head>
 <body>
-
-    <h1>Gestion de la Bibliothèque</h1>
-
-    <div class="section-admin">
-        <h3>Ajouter un livre (Admin)</h3>
-        <form action="/admin/ajouter_livre" method="POST">
-            <input type="text" name="titre" placeholder="Titre du livre" required>
-            <input type="text" name="auteur" placeholder="Auteur" required>
-            <button type="submit">Ajouter au stock</button>
-        </form>
+    <div class="container">
+        <header>
+            <h1>📚 Bibliothèque en ligne</h1>
+            <div class="user-info">
+                <div>
+                    {% if est_admin %}
+                        <span>👑 Connecté en tant qu'Administrateur</span>
+                    {% elif est_user %}
+                        <span>👤 Connecté en tant qu'Utilisateur</span>
+                    {% else %}
+                        <span>👋 Bienvenue, invité</span>
+                    {% endif %}
+                </div>
+                <div class="nav-links">
+                    {% if est_user or est_admin %}
+                        <a href="/mes_emprunts">📖 Mes Emprunts</a>
+                    {% endif %}
+                    {% if est_admin %}
+                        <a href="/admin/gestion">⚙️ Gestion</a>
+                    {% endif %}
+                    {% if est_user or est_admin %}
+                        <a href="/deconnexion">🚪 Déconnexion</a>
+                    {% else %}
+                        <a href="/authentification">🔐 Connexion</a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+        
+        <div class="search-section">
+            <h2>🔍 Rechercher un livre</h2>
+            <form class="search-form" action="/recherche_livres" method="get">
+                <input type="text" name="q" placeholder="Titre ou auteur..." value="{{ query or '' }}">
+                <select name="categorie">
+                    <option value="">Toutes les catégories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.categorie }}" {% if categorie_selectionnee == cat.categorie %}selected{% endif %}>
+                            {{ cat.categorie }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Rechercher</button>
+            </form>
+        </div>
+        
+        {% if livres %}
+            <div class="books-grid">
+                {% for livre in livres %}
+                <div class="book-card">
+                    <h3>{{ livre.titre }}</h3>
+                    <div class="book-info"><strong>Auteur:</strong> {{ livre.auteur }}</div>
+                    {% if livre.categorie %}
+                        <div class="book-info"><strong>Catégorie:</strong> {{ livre.categorie }}</div>
+                    {% endif %}
+                    {% if livre.isbn %}
+                        <div class="book-info"><strong>ISBN:</strong> {{ livre.isbn }}</div>
+                    {% endif %}
+                    
+                    <div class="stock {% if livre.quantite_disponible <= 2 %}low{% else %}available{% endif %}">
+                        📚 {{ livre.quantite_disponible }} / {{ livre.quantite_totale }} disponible(s)
+                    </div>
+                    
+                    <div class="book-actions">
+                        {% if livre.quantite_disponible > 0 and (est_user or est_admin) %}
+                            <form action="/emprunter/{{ livre.id }}" method="post" style="margin: 0;">
+                                <button type="submit" class="btn btn-primary">📖 Emprunter</button>
+                            </form>
+                        {% endif %}
+                        <a href="/livre/{{ livre.id }}" class="btn btn-secondary">ℹ️ Détails</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-results">
+                <h2>😔 Aucun livre trouvé</h2>
+                <p>Essayez une autre recherche ou parcourez toutes les catégories</p>
+                <a href="/bibliotheque" class="btn btn-primary" style="margin-top: 20px;">Voir tous les livres</a>
+            </div>
+        {% endif %}
     </div>
-
-    <h3>Livres disponibles</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Titre</th>
-                <th>Auteur</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for livre in data %}
-            <tr>
-                <td>{{ livre[0] }}</td>
-                <td>{{ livre[1] }}</td>
-                <td>{{ livre[2] }}</td>
-                <td>
-                    <a href="/emprunter/{{ livre[0] }}" class="btn-emprunt">Emprunter</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
 </body>
 </html>
